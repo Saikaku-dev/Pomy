@@ -13,7 +13,7 @@ struct PomyApp: App {
     
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            MainTabView()
                 .environmentObject(bleManager)
         }
     }
