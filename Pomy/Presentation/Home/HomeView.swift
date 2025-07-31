@@ -6,8 +6,11 @@
 //
 
 import SwiftUI
+import CoreBluetooth
 
 struct HomeView: View {
+    @EnvironmentObject var bleManager: BLEManager
+    
     var body: some View {
         ZStack {
             Image("colorful_tomato")
@@ -17,7 +20,14 @@ struct HomeView: View {
             Color.clear.opacity(0.1)
                 .background(.ultraThinMaterial)
             
-            Text("POMY")
+            if let device = bleManager.connectedPeripheral {
+                VStack {
+                    Text("接続中デバイス UUID: \(device.identifier.uuidString)")
+                    Text("Bool値: \(bleManager.m5StickBoolValue ? "true" : "false")")
+                }
+            } else {
+                Text("デバイスに未接続です")
+            }
             
             Text("")
         }
@@ -33,4 +43,5 @@ extension Color {
 
 #Preview {
     HomeView()
+        .environmentObject(BLEManager())
 }

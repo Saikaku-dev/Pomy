@@ -11,10 +11,15 @@ import Combine
 class BLEManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     @Published var devices: [CBPeripheral] = []
     @Published var connectedPeripheral: CBPeripheral?
+    @Published var m5StickBoolValue: Bool = false
     
     private var centralManager: CBCentralManager!
     private var scannedPeripheralIdentifiers = Set<UUID>()
     
+    // 固有UUIDをここで定義する
+    private let m5StickServiceUUID = CBUUID(string: "12345678-1234-1234-1234-123456789abc")
+    private let m5StickBoolCharacteristicUUID = CBUUID(string: "87654321-4321-4321-4321-cba987654321")
+    private var targetCharacteristic: CBCharacteristic?
     override init() {
         super.init()
         centralManager = CBCentralManager(delegate: self, queue: nil)
@@ -74,10 +79,49 @@ class BLEManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeriph
         connectedPeripheral = peripheral
         print("\(peripheral.name ?? "名前なし") に接続しました")
         stopScan()
+        peripheral.discoverServices([m5StickServiceUUID]) // M5StickのサービスUUIDで探索（またはnilで全部）
     }
     
     // 接続失敗時のコールバック
     func centralManager(_ central: CBCentralManager, didFailToConnect peripheral: CBPeripheral, error: Error?) {
         print("接続失敗: \(error?.localizedDescription ?? "不明なエラー")")
+    }
+    
+    // サービス発見
+    func peripheral(_ peripheral: CBPeripheral, didDiscoverServices error: Error?) {
+        guard let services = peripheral.services else { return }
+        for service in services {
+            if service.uuid == m5StickServiceUUID {
+                peripheral.discoverCharacteristics([m5StickBoolCharacteristicUUID], for: service)
+            }
+        }
+    }
+    
+    // キャラクタリスティック発見
+    func peripheral(_ peripheral: CBPeripheral, didDiscoverCharacteristicsFor service: CBService, error: Error?) {
+        guard let characteristics = service.characteristics else { return }
+        for characteristic in characteristics {
+            if characteristic.uuid == m5StickBoolCharacteristicUUID {
+                targetCharacteristic = characteristic
+                peripheral.readValue(for: characteristic)
+                peripheral.setNotifyValue(true, for: characteristic)
+            }
+        }
+    }
+    
+    // キャラクタリスティックの値更新受信（TRUE/FALSE の受け取り）
+    func peripheral(_ peripheral: CBPeripheral, didUpdateValueFor characteristic: CBCharacteristic, error: Error?) {
+        print("didUpdateValueFor called, uuid: \(characteristic.uuid.uuidString)")
+        if let data = characteristic.value {
+            print("Received data: \(data as NSData)")
+            if let presenceData = PresenceData(data: data) {
+                print("Parsed bool value: \(presenceData.isPresent)")
+                DispatchQueue.main.async {
+                    self.m5StickBoolValue = presenceData.isPresent
+                }
+            } else {
+                print("Data parsing failed")
+            }
+        }
     }
 }
