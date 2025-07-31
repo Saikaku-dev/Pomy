@@ -1,10 +1,3 @@
-//
-//  ContentView.swift
-//  Pomy
-//
-//  Created by cmStudent on 2025/07/24.
-//
-
 import SwiftUI
 import CoreBluetooth
 
@@ -15,68 +8,92 @@ struct SearchDeviceView: View {
     var body: some View {
         NavigationView {
             ZStack {
+                // 背景画像＋半透明マテリアルを分けて自然な見え方に
                 Image("colorful_tomato")
                     .resizable()
                     .scaledToFill()
-                    .frame(width: 300)
-                Color.clear.opacity(0.1)
+                    .ignoresSafeArea() // 画面全体に広げる場合
+                Color(.systemBackground)
+                    .opacity(0.3)
                     .background(.ultraThinMaterial)
-                VStack {
+                    .ignoresSafeArea()
+                
+                VStack(spacing: 16) {
                     Text("設備検出一覧")
                         .font(.title)
                         .fontWeight(.bold)
-                    Divider()
-                    Button(isScanning ? "検出停止" : "検出開始") {
-                        if isScanning {
-                            bleManager.stopScan()
-                        } else {
-                            bleManager.startScan()
-                        }
-                        isScanning.toggle()
-                    }
-                    .foregroundColor(isScanning ? .red : .green)
-                    .padding()
                     
+                    Divider()
+                    
+                    Button(action: toggleScan) {
+                        Text(isScanning ? "検出停止" : "検出開始")
+                            .fontWeight(.semibold)
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(isScanning ? Color.red.opacity(0.8) : Color.green.opacity(0.8))
+                            .foregroundColor(.white)
+                            .cornerRadius(10)
+                    }
+                    .padding(.horizontal)
+                    
+                    // スキャン中はインジケータを表示しつつ、デバイスリストも表示
                     if isScanning {
-                        // スキャン中は「検出中…」を表示
                         HStack(spacing: 8) {
                             ProgressView()
                             Text("検出中…")
                                 .foregroundColor(.gray)
                         }
-                        .padding(.vertical, 8)
+                        .padding(.horizontal)
                     }
                     
-                    if bleManager.devices.isEmpty {
-                        Text("デバイスが見つかりませんでした")
-                            .padding()
-                    } else {
-                        List(bleManager.devices, id: \.identifier) { device in
-                            HStack {
-                                Text(device.name ?? "名前なしのデバイス")
-                                Spacer()
-                                if bleManager.connectedPeripheral?.identifier == device.identifier {
-                                    Text("接続済み")
-                                        .foregroundColor(.green)
-                                } else {
-                                    Button("接続") {
-                                        bleManager.connect(to: device)
+                    Group {
+                        if bleManager.devices.isEmpty {
+                            Text("デバイスが見つかりませんでした")
+                                .foregroundColor(.secondary)
+                                .padding()
+                        } else {
+                            List(bleManager.devices, id: \.identifier) { device in
+                                HStack {
+                                    Text(device.name ?? "名前なしのデバイス")
+                                        .lineLimit(1)
+                                    Spacer()
+                                    if bleManager.connectedPeripheral?.identifier == device.identifier {
+                                        Text("接続済み")
+                                            .foregroundColor(.green)
+                                            .fontWeight(.semibold)
+                                    } else {
+                                        Button("接続") {
+                                            bleManager.connect(to: device)
+                                        }
+                                        .buttonStyle(BorderlessButtonStyle()) // List内ボタンのトラブル回避
                                     }
                                 }
+                                .padding(.vertical, 6)
                             }
-                            .padding(5)
+                            .listStyle(PlainListStyle())
                         }
                     }
+                    .frame(maxHeight: 400) // 高さ制限を調整可能に
+                    
                     Spacer()
                 }
-                .frame(height: 700)
+                .padding(.top, 48)
+                .padding(.bottom, 24)
+                .padding(.horizontal)
             }
             .navigationBarBackButtonHidden()
-            .ignoresSafeArea()
         }
     }
+    
+    private func toggleScan() {
+        if isScanning {
+            bleManager.stopScan()
+        } else {
+            bleManager.startScan()
+        }
+        isScanning.toggle()
+    }
 }
-
 
 #Preview {
     SearchDeviceView()
