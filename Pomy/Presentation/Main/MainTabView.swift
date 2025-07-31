@@ -20,10 +20,10 @@ struct MainTabView: View {
                     Image(systemName: "house")
                     Text("Home")
                 }
-            SettingView()
+                SearchDeviceView()
                 .tabItem {
-                    Image(systemName: "person")
-                    Text("Setting")
+                    Image(systemName: "magnifyingglass")
+                    Text("Search")
                 }
         }
         .tint(.red)
@@ -34,4 +34,5 @@ struct MainTabView: View {
 
 #Preview {
     MainTabView()
+        .environmentObject(BLEManager())
 }
