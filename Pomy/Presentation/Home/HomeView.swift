@@ -23,7 +23,7 @@ struct HomeView: View {
             if let device = bleManager.connectedPeripheral {
                 VStack {
                     Text("接続中デバイス UUID: \(device.identifier.uuidString)")
-                    Text("Bool値: \(bleManager.m5StickBoolValue ? "true" : "false")")
+                    Text("Bool値: \(String(bleManager.m5StickBoolValue))")
                 }
             } else {
                 Text("デバイスに未接続です")

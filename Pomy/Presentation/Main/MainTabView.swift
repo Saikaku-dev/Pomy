@@ -13,7 +13,7 @@ struct MainTabView: View {
             CalendarView()
                 .tabItem {
                     Image(systemName: "calendar")
-                    Text("Home")
+                    Text("Calendar")
                 }
             HomeView()
                 .tabItem {
@@ -22,8 +22,8 @@ struct MainTabView: View {
                 }
                 SearchDeviceView()
                 .tabItem {
-                    Image(systemName: "magnifyingglass")
-                    Text("Search")
+                    Image(systemName: "person")
+                    Text("Setting")
                 }
         }
         .tint(.red)
