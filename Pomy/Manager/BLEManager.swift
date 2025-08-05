@@ -34,6 +34,8 @@ class BLEManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeriph
         if centralManager.state == .poweredOn {
             // すべての周辺機器をスキャン
             centralManager.scanForPeripherals(withServices: nil, options: [CBCentralManagerScanOptionAllowDuplicatesKey: false])
+        } else {
+            print("BLE が利用可能な状態ではありません")
         }
     }
     
@@ -71,6 +73,7 @@ class BLEManager: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeriph
     
     // デバイスに接続する
     func connect(to peripheral: CBPeripheral) {
+        peripheral.delegate = self
         centralManager.connect(peripheral, options: nil)
     }
     
